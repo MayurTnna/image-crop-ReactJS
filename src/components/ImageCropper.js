@@ -33,7 +33,6 @@ const ImageCropper = () => {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
         const resizedDataUrl = canvas.toDataURL(reader.result);
-        console.log(resizedDataUrl);
 
         setImage(resizedDataUrl);
       };
@@ -60,25 +59,24 @@ const ImageCropper = () => {
       const img = new Image();
       img.src = image;
       const canvas = document.createElement("canvas");
-      const scaleX = 600 / img.width;
-      const scaleY = img.naturalHeight / img.height;
+
+      const scaleX = img.naturalWidth / img.width;
+      const scaleY = img.naturalWidth / img.height;
       const pixelRatio = window.devicePixelRatio;
       canvas.width = Math.floor(crop.width * scaleX * pixelRatio);
       canvas.height = Math.floor(crop.height * scaleY * pixelRatio);
       const ctx = canvas.getContext("2d");
       ctx.scale(pixelRatio, pixelRatio);
       ctx.imageSmoothingQuality = "high";
-      const cropX = crop.x * scaleX;
-      const cropY = crop.y * scaleY;
-      const centerX = 600 / 2;
-      const centerY = image.naturalHeight / 2;
+      const centerX = crop.width / 2;
+      const centerY = crop.height / 2;
 
       const radius = Math.min(centerX, centerY);
 
-      //   ctx.beginPath();
-      //   ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-      //   ctx.clip();
-      //   ctx.save();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+      ctx.clip();
+      ctx.save();
 
       ctx.drawImage(
         img,
@@ -93,6 +91,7 @@ const ImageCropper = () => {
       );
       ctx.restore();
       setCroppedImage(canvas.toDataURL());
+      console.log(canvas.toDataURL());
     }
   };
 
@@ -114,17 +113,13 @@ const ImageCropper = () => {
           onComplete={onCropComplete}
           onChange={(c) => setCrop(c)}
         >
-          <img src={image} alt="Crop preview" style={{ maxWidth: "500px" }} />
+          <img src={image} alt="Crop preview" />
         </ReactCrop>
       )}
       {croppedImage && (
         <div>
           <h2>Preview:</h2>
-          <img
-            src={croppedImage}
-            alt="Cropped"
-            style={{ borderRadius: "50%" }}
-          />
+          <img src={croppedImage} alt="Cropped" />
           <button onClick={onSave}>Save</button>
         </div>
       )}
