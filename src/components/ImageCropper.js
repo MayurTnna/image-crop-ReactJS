@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
+import { storage } from "../firebase";
+
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 const ImageCropper = () => {
   const [crop, setCrop] = useState({ aspect: 1 / 1 });
   const [image, setImage] = useState(null);
   const [croppedImage, setCroppedImage] = useState(null);
+  const [url, setUrl] = useState(null);
 
   const onSelectFile = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -94,10 +98,37 @@ const ImageCropper = () => {
       console.log(canvas.toDataURL());
     }
   };
+  function dataURLtoBlob(dataurl) {
+    const arr = dataurl.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  }
 
   const onSave = () => {
     console.log(croppedImage);
     localStorage.setItem("user", croppedImage);
+    const uniqueId = Date.now().toString();
+    const imageBlob = dataURLtoBlob(croppedImage);
+    const imageRef = ref(storage, `cropped_image_${uniqueId}`);
+    uploadBytes(imageRef, imageBlob)
+      .then(() => {
+        getDownloadURL(imageRef)
+          .then((url) => {
+            setUrl(url);
+          })
+          .catch((error) => {
+            console.log(error.message, "error getting image url");
+          });
+      })
+      .catch((error) => {
+        console.log(error.message);
+      });
   };
 
   return (
